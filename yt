@@ -57,25 +57,20 @@ do
     esac
 done
 
-if [ ! "$*" ]
+SEARCH="$*"
+
+if [ ! "$SEARCH" ]
 then
-    echo "No search string given!"
-    exit 1
+	SEARCH=$(printf "" | eval dmenu -p Search:)
 fi
 
-SEARCH_JQ='.title + " | " + .uploader + " | " + (.description | tojson) + "\u0000", ., "\n"'
-PREVIEW_JQ='"\u001b[0;1m" + .title + "\u001b[0m" + "\n" + if (.duration | isfinite) then (.duration / 60 | round | tostring) else "?" end + " min | views: " + if (.view_count | isfinite) then (.view_count | tostring) else "?" end + " | " + .uploader + "\n\n" + .description + "\n\n\n"'
-PREVIEW_CMD="cat {f2} | jq -jr $(printf '%q' "$PREVIEW_JQ");[ '{n}' != '{+n}' ] && echo -e '\033[33;1m---   Playlist   ---\033[0m' && cat {+f2} | jq -jr $(printf '%q' "$PREVIEW_JQ")"
-
-URLS=$(youtube-dl ytsearch$N:"$*" -j --flat-playlist | jq -cj "$SEARCH_JQ" | fzf --preview="$PREVIEW_CMD" --preview-window="wrap" -m -n 1 --with-nth=1 -d '\0' --ansi | cut -d '' -f2 | jq -r '"https://www.youtube.com/watch?v=" + .url')
+JSON="$(youtube-dl ytsearch$N:"$SEARCH" -j --flat-playlist)"
+TITLE=$(echo $JSON | jq -r ".title" | dmenu -i -l 30)
+URLS=$(echo $JSON | jq -r "select(.title == \"$TITLE\") | .url")
 
 if [ ! "$URLS" ]; then
     echo "No video(s) selected!"
     exit 1
 fi
 
-echo "Selected URLs:"
-echo "--------------"
-echo "$URLS"
-echo "--------------"
-$CONSUMER $URLS
+$CONSUMER https://www.youtube.com/watch?v=$URLS
