@@ -2,7 +2,7 @@
 Search and play YouTube videos via command line.
 
 ## Installation
-yt is just a simple bash script and relies on `youtube-dl`, `jq`, `fzf` and `mpv` for the heavy
+yt is just a simple bash script and relies on `youtube-dl`, `jq`, `dmenu` and `mpv` for the heavy
 lifting, so make sure these programs are installed.
 
 ## Usage
@@ -18,6 +18,3 @@ Search and play YouTube videos.
   -v, --version      Print version.
   --                 Stops interpreting the following arguments as options.
 ```
-
-## Packages
-There is an AUR package available: [yt](https://aur.archlinux.org/packages/yt/)
