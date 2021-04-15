@@ -8,22 +8,29 @@
 
 N=50
 CONSUMER="mpv"
+MENUER="dmenu -i -l 30"
+
+_help() {
+	cat <<-_EOF
+USAGE yt [OPTIONS] "SEARCH STRING"
+
+Search and play YouTube videos.
+
+  -h, --help         Show this help.
+  -n, --num-results  Number of search results to fetch, defaults to 50.
+  -c, --consumer     Command to be called with URLs of selected videos,
+                     default is mpv.
+  -v, --version      Print version.
+  --                 Stops interpreting the following arguments as options.
+	_EOF
+	exit
+}
 
 while [[ $# -gt 0 ]]
 do
     case "$1" in
         -h|--help)
-            echo 'USAGE yt [OPTIONS] "SEARCH STRING"'
-            echo ''
-            echo 'Search and play YouTube videos.'
-            echo ''
-            echo '  -h, --help         Show this help.'
-            echo '  -n, --num-results  Number of search results to fetch, defaults to 50.'
-            echo '  -c, --consumer     Command to be called with URLs of selected videos,'
-            echo '                     default is mpv.'
-            echo '  -v, --version      Print version.'
-            echo '  --                 Stops interpreting the following arguments as options.'
-            exit
+	    _help
             ;;
         -n|--num-results)
             N="$2"
@@ -59,18 +66,24 @@ done
 
 SEARCH="$*"
 
-if [ ! "$SEARCH" ]
-then
-	SEARCH=$(printf "" | eval dmenu -p Search:)
-fi
+#Check if there is a standard input and use it.
+[ ! -t 0 ] && SEARCH="$(cat /dev/stdin)"
 
-JSON="$(youtube-dl ytsearch$N:"$SEARCH" -j --flat-playlist)"
-TITLE=$(echo $JSON | jq -r ".title" | dmenu -i -l 30)
-URLS=$(echo $JSON | jq -r "select(.title == \"$TITLE\") | .url")
+[ ! -z "$SSH_TTY" ] && MENUER="fzf -i" && [ -z "$SEARCH" ] && _help 	# use fzf if in ssh session
+
+[ ! "$SEARCH" ] && SEARCH="$(printf "" | eval dmenu -p Search:)"	# give dmenu prompt if no string was given
+
+[ -z "$SEARCH" ] && echo "No search given!" 1>&2 && exit 1 		# check if there was a string giveen
+
+JSON="$(youtube-dl ytsearch$N:"$SEARCH" -j --flat-playlist)" 		# search for the video
+TITLE=$(echo $JSON | jq -r ".title" | $MENUER)				# Display the menu
+URLS=$(echo $JSON | jq -r "select(.title == \"$TITLE\") | .url")	# get the url from title
 
 if [ ! "$URLS" ]; then
-    echo "No video(s) selected!"
+    echo "No video selected!" 1>&2
     exit 1
 fi
 
-$CONSUMER https://www.youtube.com/watch?v=$URLS
+if [ -p /dev/stdout ]; then echo "https://www.youtube.com/watch?v=$URLS"; else
+	$CONSUMER https://www.youtube.com/watch?v=$URLS
+fi
