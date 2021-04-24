@@ -18,8 +18,6 @@ Search and play YouTube videos.
 
   -h, --help         Show this help.
   -n, --num-results  Number of search results to fetch, defaults to 50.
-  -c, --consumer     Command to be called with URLs of selected videos,
-                     default is mpv.
   -v, --version      Print version.
   --                 Stops interpreting the following arguments as options.
 	_EOF
@@ -37,15 +35,6 @@ do
             if ! [[ "$N" =~ ^[0-9]+$ ]]
             then
                 echo "'$N' is not an integer!"
-                exit 1
-            fi
-            shift 2
-            ;;
-        -c|--consumer)
-            CONSUMER="$2"
-            if [ ! "$CONSUMER" ]
-            then
-                echo "Consumer command is missing!"
                 exit 1
             fi
             shift 2
