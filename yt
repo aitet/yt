@@ -8,7 +8,7 @@
 
 N=50
 CONSUMER="mpv"
-MENUER="dmenu -i -l 30"
+MENUER="dmenu -i -l 20"
 
 _help() {
 	cat <<-_EOF
