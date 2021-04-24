@@ -65,7 +65,7 @@ SEARCH="$*"
 [ -z "$SEARCH" ] && echo "No search given!" 1>&2 && exit 1 		# check if there was a string giveen
 
 JSON="$(youtube-dl ytsearch$N:"$SEARCH" -j --flat-playlist)" 		# search for the video
-TITLE=$(echo $JSON | jq -r ".title" | $MENUER)				# Display the menu
+TITLE=$(echo $JSON | jq -r ".title" | $MENUER | sed 's/"/\\"/g')				# Display the menu
 URLS=$(echo $JSON | jq -r "select(.title == \"$TITLE\") | .url")	# get the url from title
 
 if [ ! "$URLS" ]; then
