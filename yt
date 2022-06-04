@@ -66,13 +66,18 @@ SEARCH="$*"
 
 JSON="$(youtube-dl ytsearch$N:"$SEARCH" -j --flat-playlist)" 		# search for the video
 TITLE=$(echo $JSON | jq -r ".title" | $MENUER | sed 's/"/\\"/g')				# Display the menu
-URLS=$(echo $JSON | jq -r "select(.title == \"$TITLE\") | .url")	# get the url from title
+VIDEOID=$(echo $JSON | jq -r "select(.title == \"$TITLE\") | .url")	# get the url from title
 
-if [ ! "$URLS" ]; then
+
+if [ ! "$VIDEOID" ]; then
     echo "No video selected!" 1>&2
     exit 1
 fi
 
-if [ -p /dev/stdout ]; then echo "https://www.youtube.com/watch?v=$URLS"; else
-	$CONSUMER https://www.youtube.com/watch?v=$URLS
+for arg in $VIDEOID; do
+        tosend="$tosend https://www.youtube.com/watch?v=$arg"
+done
+
+if [ -p /dev/stdout ]; then echo $tosend; else
+	$CONSUMER $tosend
 fi
